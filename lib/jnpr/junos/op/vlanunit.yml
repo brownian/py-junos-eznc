@@ -1,0 +1,94 @@
+---
+VlanUnitPortTable:
+  rpc: get-interface-information
+  args:
+    # interface_name: '[fgx]e*'
+    interface_name: 'xe-0/0/[0-9].*'
+    extensive: True
+    detail: True
+  args_key: interface_name
+  item: logical-interface
+  view: VlanUnitPortView
+
+VlanUnitPortView:
+  fields:
+    # name : name
+    local_index : { local-index : int }
+    snmp_index : { snmp-index : int }
+    generation : { generation : int }
+    encapsulation : encapsulation
+    link_address : link-address
+    address_family : _afTable
+    up : { if-config-flags/iff-up : flag }
+    down : { if-config-flags/iff-down : flag }
+    snmp_traps : { if-config-flags/iff-snmp-traps : flag }
+    internal_flags : if-config-flags/internal-flags
+
+
+_afTable:
+  key : address-family-name
+  item : address-family
+  view : _afTableView
+
+_afTableView:
+  fields:
+    # mtu : { mtu : int }  # <-- doesn't work, mtu can be int or "Unlimited"
+    mtu : mtu
+    unnumbered : { address-family-flags/ifff-unnumbered : flag }
+    internal_flags : address-family-flags/internal-flags
+    source_class_statistics : _scsTable
+    interface_address : _iaddrTable
+    # NOT USED now:
+    # donor_iface : _afUnnTable
+    donor_iface_name : address-family-unnumbered/unnumbered-family-donor-interface-name
+    donor_iface_index : { address-family-unnumbered/unnumbered-family-donor-interface-index : int }
+
+  groups:
+    filter_information : filter-information
+
+  fields_filter_information :
+    filter_input : filter-input
+    filter_output : filter-output
+
+
+_scsTable:
+  key : scu-class-name
+  item : source-class-statistics/source-class
+  view : _scsTableView
+
+_scsTableView:
+  fields:
+    scu_class_packets : { scu-class-packets : int }
+    scu_class_bytes : { scu-class-bytes : int }
+    scu_class_pps : { scu-class-pps : int }
+    scu_class_bps : { scu-class-bps : int }
+
+
+_iaddrTable:
+  key : generation
+  item : interface-address
+  view : _iaddrTableView
+
+_iaddrTableView:
+  fields:
+    ifa_local : ifa-local
+    ifa_broadcast : ifa-broadcast
+    ifa_destination : ifa-destination
+    preferred : { ifa-flags/ifaf-current-preferred : flag }
+    primary : { ifa-flags/ifaf-current-primary : flag }
+    down : { ifa-flags/ifaf-down : flag }
+
+
+#
+# NOT USED now:
+#
+_afUnnTable:
+  key: unnumbered-family-donor-interface-index
+  item : address-family-unnumbered
+  view : _afUnnTableView
+
+_afUnnTableView:
+  fields:
+    name : unnumbered-family-donor-interface-name
+
+### ---------------------------------------------------------------------------
